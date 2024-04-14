@@ -2,12 +2,37 @@ function $(selector, doc = document) {
   return doc.querySelector(selector);
 }
 
+const mute$ = $('.ytp-mute-button');
+const mask$ = document.body.appendChild(document.createElement('div'));
+Object.assign(mask$.style, {
+  width: '100svw',
+  height: '100svb',
+  'background-color': 'rgba(0, 0, 0, 0.8)',
+  position: 'fixed',
+  display: 'none',
+});
+
 function isDisplay(target) {
   return target.style.getPropertyValue('display') !== 'none';
 }
 
 function setObserver(target$, callback, filter) {
   (new MutationObserver(callback)).observe(target$, filter);
+}
+
+function mute(shouldMute) {
+  const muted = !$('.ytp-svg-volume-animation-speaker');
+  if (!shouldMute) {
+    if (muted) {
+      mute$.click();
+    }
+    mask$.style.display = 'none';
+    return;
+  }
+  if (!muted) {
+    mute$.click();
+  }
+  mask$.style.display = 'unset';
 }
 
 function clickSkip() {
@@ -53,8 +78,10 @@ if ($adModOuter) {
     ([record]) => {
       console.info(`callback: 1st: addNodes.length: ${record?.addedNodes?.length}`);
       if (!record?.addedNodes?.length) {
+        mute(false);
         return;
       }
+      mute(true);
       readySkip(true);
     },
     {

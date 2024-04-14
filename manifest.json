@@ -1,7 +1,7 @@
 {
   "version": "0.1.0",
-  "name": "YT Skip-Ad-Button Clicker",
-  "description": "YT Skip-Ad-Button Clicker",
+  "name": "YT Skip-ad-button Clicker",
+  "description": "Automatically click the skip-ad-button on YT.",
   "manifest_version": 3,
   "content_scripts": [
     {
