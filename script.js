@@ -2,7 +2,6 @@ function $(selector, doc = document) {
   return doc.querySelector(selector);
 }
 
-const mute$ = $('.ytp-mute-button');
 const mask$ = document.body.appendChild(document.createElement('div'));
 Object.assign(mask$.style, {
   width: '100svw',
@@ -21,7 +20,8 @@ function setObserver(target$, callback, filter) {
 }
 
 function mute(shouldMute) {
-  const muted = !$('.ytp-svg-volume-animation-speaker');
+  const mute$ = $('.ytp-mute-button');
+  const muted = !$('.ytp-svg-volume-animation-speaker', mute$);
   if (!shouldMute) {
     if (muted) {
       mute$.click();
