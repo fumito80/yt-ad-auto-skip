@@ -1,0 +1,20 @@
+{
+  "version": "0.1.0",
+  "name": "YT Skip-Ad-Button Clicker",
+  "description": "YT Skip-Ad-Button Clicker",
+  "manifest_version": 3,
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/watch*"
+      ],
+      "js": [
+        "script.js"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "permissions": [],
+  "host_permissions": [],
+  "content_security_policy": {}
+}
