@@ -13,8 +13,5 @@
       ],
       "run_at": "document_end"
     }
-  ],
-  "permissions": [],
-  "host_permissions": [],
-  "content_security_policy": {}
+  ]
 }

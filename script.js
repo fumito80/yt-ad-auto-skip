@@ -2,15 +2,6 @@ function $(selector, doc = document) {
   return doc.querySelector(selector);
 }
 
-const mask$ = document.body.appendChild(document.createElement('div'));
-Object.assign(mask$.style, {
-  width: '100svw',
-  height: '100svb',
-  'background-color': 'rgba(0, 0, 0, 0.8)',
-  position: 'fixed',
-  display: 'none',
-});
-
 function isDisplay(target) {
   return target.style.getPropertyValue('display') !== 'none';
 }
@@ -22,17 +13,15 @@ function setObserver(target$, callback, filter) {
 function mute(shouldMute) {
   const mute$ = $('.ytp-mute-button');
   const muted = !$('.ytp-svg-volume-animation-speaker', mute$);
-  if (!shouldMute) {
-    if (muted) {
+  if (shouldMute) {
+    if (!muted) {
       mute$.click();
     }
-    mask$.style.display = 'none';
     return;
   }
-  if (!muted) {
+  if (muted) {
     mute$.click();
   }
-  mask$.style.display = 'unset';
 }
 
 function clickSkip() {
@@ -44,10 +33,7 @@ function readySkip(shuoldObserve) {
 
   const target$ = $('.ytp-ad-skip-button-slot');
 
-  console.info(`readySkip: shuoldObserve: ${shuoldObserve}, target: ${!!target$}`);
-
   const callback = ([record], observer) => {
-    console.info(`callback: readySkip`);
     if (!isDisplay(record?.target)) {
       return;
     }
@@ -76,7 +62,6 @@ if ($adModOuter) {
   setObserver(
     $adModOuter,
     ([record]) => {
-      console.info(`callback: 1st: addNodes.length: ${record?.addedNodes?.length}`);
       if (!record?.addedNodes?.length) {
         mute(false);
         return;
