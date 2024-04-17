@@ -1,8 +1,11 @@
 {
   "version": "0.1.0",
-  "name": "YT Skip-ad-button Clicker",
-  "description": "Automatically click the skip-ad-button on YT.",
+  "name": "YT Ad Minimizer",
+  "description": "Mutes ad on YouTube and clicks the skip button.",
   "manifest_version": 3,
+  "icons": {
+    "48": "icon.png"
+  },
   "content_scripts": [
     {
       "matches": [
@@ -11,7 +14,7 @@
       "js": [
         "script.js"
       ],
-      "run_at": "document_end"
+      "run_at": "document_idle"
     }
   ]
 }
