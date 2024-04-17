@@ -47,10 +47,12 @@ function readySkip() {
     return;
   }
 
+  let timer;
   const callback = ([record], observer) => {
     if (!isDisplay(record?.target)) {
       return;
     }
+    clearTimeout(timer);
     observer.disconnect();
     clickSkip();
   };
@@ -61,7 +63,7 @@ function readySkip() {
   };
 
   const observer = setObserver(target$, callback, filter);
-  setTimeout(() => observer.disconnect(), 10000);
+  timer = setTimeout(() => observer.disconnect(), 10000);
 }
 
 function run(isInit) {
@@ -72,6 +74,10 @@ function run(isInit) {
       setTimeout(run, 3000);
     }
     return;
+  }
+
+  if ($adModOuter.children.length > 0) {
+    readySkip();
   }
 
   let muted = isMuted();
@@ -87,10 +93,18 @@ function run(isInit) {
       }
       muted = isMuted();
       mute(true);
-      readySkip(true);
+      readySkip();
     },
     { childList: true },
   );
 }
 
-run(true);
+chrome.runtime.onMessage.addListener((_, __, sendMessage) => {
+  sendMessage({ msg: 'done' });
+});
+
+if (!window.scripting) {
+  run(true);
+}
+
+window.scripting = 'done';

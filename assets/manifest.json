@@ -1,20 +1,17 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "YT Ad Minimizer",
-  "description": "Mutes ad on YouTube and clicks the skip button.",
   "manifest_version": 3,
   "icons": {
     "48": "icon.png"
   },
-  "content_scripts": [
-    {
-      "matches": [
-        "https://www.youtube.com/watch*"
-      ],
-      "js": [
-        "script.js"
-      ],
-      "run_at": "document_idle"
-    }
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*"
   ]
 }
