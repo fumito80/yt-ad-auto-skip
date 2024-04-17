@@ -1,7 +1,7 @@
 {
-  "name": "yt-ad-auto-skip",
+  "name": "yt-ad-minimizer",
   "version": "1.0.0",
-  "description": "Automatically click the skip-ad-button and mute on YT.",
+  "description": "",
   "main": "script.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
