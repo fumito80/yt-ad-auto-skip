@@ -77,6 +77,7 @@ function run(isInit) {
   }
 
   if ($adModOuter.children.length > 0) {
+    mute(true);
     readySkip();
   }
 
