@@ -3,7 +3,8 @@ const CopyPlugin = require('copy-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
-module.exports = {
+module.exports = (mode) => ({
+  mode,
   entry: {
     script: './src/script.js',
     background: './src/background.js',
@@ -12,6 +13,17 @@ module.exports = {
     extensions: ['.js'],
   },
   target: ['web', 'es2021'],
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: [
+          { loader: 'ifdef-loader', options: { mode } },
+        ],
+      },
+    ],
+  },
   watchOptions: {
     poll: true,
   },
@@ -27,4 +39,4 @@ module.exports = {
     }),
     new CleanWebpackPlugin(),
   ],
-};
+});

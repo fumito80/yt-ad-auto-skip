@@ -1,9 +1,9 @@
 {
-  "version": "0.3.0",
+  "version": "0.4.0",
   "name": "YT Ad Minimizer",
   "manifest_version": 3,
   "icons": {
-    "48": "icon.png"
+    "128": "promo128.png"
   },
   "background": {
     "service_worker": "background.js"

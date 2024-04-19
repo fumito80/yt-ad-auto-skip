@@ -19,6 +19,10 @@ function setObserver(target$, callback, filter) {
 function mute(shouldMute) {
   const mute$ = $('.ytp-mute-button');
   const muted = isMuted();
+  /// #if mode == 'DEBUG'
+  // eslint-disable-next-line no-console
+  console.log('mute', { shouldMute, muted });
+  /// #endif
   if (shouldMute) {
     if (!muted) {
       mute$.click();
@@ -30,13 +34,19 @@ function mute(shouldMute) {
   }
 }
 
+function getSkipButton() {
+  return $('.ytp-ad-skip-button-slot');
+}
+
 function clickSkip() {
   const $skip = $('.ytp-ad-skip-button.ytp-button,.ytp-ad-skip-button-modern.ytp-button');
   $skip?.click();
 }
 
 function readySkip() {
-  const target$ = $('.ytp-ad-skip-button-slot');
+  mute(true);
+
+  const target$ = getSkipButton();
 
   if (!target$) {
     return;
@@ -76,12 +86,13 @@ function run(isInit) {
     return;
   }
 
+  let muted = isMuted();
+
   if ($adModOuter.children.length > 0) {
-    mute(true);
     readySkip();
   }
 
-  let muted = isMuted();
+  let defer = Promise.resolve();
 
   setObserver(
     $adModOuter,
@@ -92,20 +103,29 @@ function run(isInit) {
         }
         return;
       }
-      muted = isMuted();
-      mute(true);
-      readySkip();
+      /// #if mode == 'DEBUG'
+      const t = new Date();
+      // eslint-disable-next-line no-console
+      console.log('observe', t.toLocaleTimeString(), t.getMilliseconds());
+      /// #endif
+      defer = defer.then((done) => new Promise((resolve) => {
+        if (done) {
+          resolve(true);
+          return;
+        }
+        muted = isMuted();
+        readySkip();
+        setTimeout(() => {
+          resolve(true);
+          defer = Promise.resolve();
+        }, 500);
+      }));
     },
     { childList: true },
   );
 }
 
-chrome.runtime.onMessage.addListener((_, __, sendMessage) => {
-  sendMessage({ msg: 'done' });
-});
-
 if (!window.scripting) {
+  window.scripting = 'done';
   run(true);
 }
-
-window.scripting = 'done';

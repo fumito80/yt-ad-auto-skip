@@ -4,15 +4,16 @@ const ZipPlugin = require('zip-webpack-plugin');
 const common = require('./webpack.common');
 const manifest = require('./assets/manifest.json');
 
+const commonProps = common('production');
+
 module.exports = {
-  ...common,
-  mode: 'production',
+  ...commonProps,
   output: {
-    ...common.output,
+    ...commonProps.output,
     path: path.resolve(__dirname, 'publish'),
   },
   plugins: [
-    ...common.plugins,
+    ...commonProps.plugins,
     new ZipPlugin({
       path: '../zip',
       filename: `${manifest.version}.zip`,

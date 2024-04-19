@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="128" height="128">
   <g transform="scale(.45) translate(-57,-58)">
-    <path fill="#fff" d="M150 130h100v130H130z"/>
-    <path fill="red" d="
+    <path fill="white" d="M120 150h180v100H120z"/>
+    <path fill="#22B14C" d="
 M199.91667116 105.6302382
 s-84.29180001.00007866-105.44791902 5.49739608
 c-11.32771618 3.16506938-20.655211 12.49266687-23.82031238 23.98698305-5.49727075 21.15613367-5.49739608 64.9687477-5.49739608 64.9687477
