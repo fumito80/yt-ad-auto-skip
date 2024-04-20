@@ -1,3 +1,7 @@
+chrome.runtime.onMessage.addListener((_, __, sendMessage) => {
+  sendMessage({ msg: 'done' });
+});
+
 // スキップボタン／親要素
 const skipButtonParent = '.ytp-ad-skip-button-slot,.ytp-skip-ad-button';
 // スキップボタン
