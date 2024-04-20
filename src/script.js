@@ -1,3 +1,14 @@
+// スキップボタン／親要素
+const skipButtonParent = '.ytp-ad-skip-button-slot,.ytp-skip-ad-button';
+// スキップボタン
+const skipButton = '.ytp-ad-skip-button.ytp-button,.ytp-ad-skip-button-modern.ytp-button,.ytp-skip-ad-button';
+// ミュートボタン
+const muteButton = '.ytp-mute-button';
+// ミュートボタンSVG
+const mutedSvg = '.ytp-svg-volume-animation-speaker';
+// AD module
+const adMod = '.video-ads.ytp-ad-module';
+
 function $(selector, doc = document) {
   return doc.querySelector(selector);
 }
@@ -7,7 +18,8 @@ function isDisplay(target$) {
 }
 
 function isMuted() {
-  return !$('.ytp-svg-volume-animation-speaker');
+  // ミュートボタン
+  return !$(mutedSvg);
 }
 
 function setObserver(target$, callback, filter) {
@@ -17,9 +29,9 @@ function setObserver(target$, callback, filter) {
 }
 
 function mute(shouldMute) {
-  const mute$ = $('.ytp-mute-button');
+  const mute$ = $(muteButton);
   const muted = isMuted();
-  /// #if mode == 'DEBUG'
+  /// #if mode == 'development'
   // eslint-disable-next-line no-console
   console.log('mute', { shouldMute, muted });
   /// #endif
@@ -34,50 +46,53 @@ function mute(shouldMute) {
   }
 }
 
-function getSkipButton() {
-  return $('.ytp-ad-skip-button-slot');
-}
-
 function clickSkip() {
-  const $skip = $('.ytp-ad-skip-button.ytp-button,.ytp-ad-skip-button-modern.ytp-button');
-  $skip?.click();
+  $(skipButton)?.click();
 }
 
-function readySkip() {
+async function readySkip() {
   mute(true);
 
-  const target$ = getSkipButton();
+  // スキップボタン親要素
+  const target$ = $(skipButtonParent);
 
   if (!target$) {
-    return;
+    return undefined;
   }
 
   if (isDisplay(target$)) {
     clickSkip();
-    return;
+    return undefined;
   }
 
-  let timer;
-  const callback = ([record], observer) => {
-    if (!isDisplay(record?.target)) {
-      return;
-    }
-    clearTimeout(timer);
-    observer.disconnect();
-    clickSkip();
-  };
+  return new Promise((resolve) => {
+    let timer;
+    const callback = ([record], observer) => {
+      if (!isDisplay(record?.target)) {
+        return;
+      }
+      clearTimeout(timer);
+      observer.disconnect();
+      clickSkip();
+      resolve();
+    };
 
-  const filter = {
-    attributes: true,
-    attributeFilter: ['style'],
-  };
+    const filter = {
+      attributes: true,
+      attributeFilter: ['style'],
+    };
 
-  const observer = setObserver(target$, callback, filter);
-  timer = setTimeout(() => observer.disconnect(), 10000);
+    const observer = setObserver(target$, callback, filter);
+    timer = setTimeout(() => {
+      observer.disconnect();
+      resolve();
+    }, 10000);
+  });
 }
 
 function run(isInit) {
-  const $adModOuter = $('.video-ads.ytp-ad-module');
+  // Ad module
+  const $adModOuter = $(adMod);
 
   if (!$adModOuter) {
     if (isInit) {
@@ -92,7 +107,7 @@ function run(isInit) {
     readySkip();
   }
 
-  let defer = Promise.resolve();
+  let defer = Promise.resolve(true);
 
   setObserver(
     $adModOuter,
@@ -101,25 +116,20 @@ function run(isInit) {
         if (!muted) {
           mute(false);
         }
+        defer = defer.then(() => true);
         return;
       }
-      /// #if mode == 'DEBUG'
-      const t = new Date();
+      /// #if mode == 'development'
       // eslint-disable-next-line no-console
-      console.log('observe', t.toLocaleTimeString(), t.getMilliseconds());
+      console.log('observe', (new Date()).toLocaleTimeString(), defer);
       /// #endif
-      defer = defer.then((done) => new Promise((resolve) => {
-        if (done) {
-          resolve(true);
-          return;
+      defer = defer.then((restart) => {
+        if (!restart) {
+          return undefined;
         }
         muted = isMuted();
-        readySkip();
-        setTimeout(() => {
-          resolve(true);
-          defer = Promise.resolve();
-        }, 500);
-      }));
+        return readySkip();
+      });
     },
     { childList: true },
   );
