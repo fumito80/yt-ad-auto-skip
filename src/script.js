@@ -2,27 +2,22 @@ chrome.runtime.onMessage.addListener((_, __, sendMessage) => {
   sendMessage({ msg: 'done' });
 });
 
-// スキップボタン／親要素
-const skipButtonParent = '.ytp-ad-skip-button-slot,.ytp-skip-ad-button';
-// スキップボタン
-const skipButton = '.ytp-ad-skip-button.ytp-button,.ytp-ad-skip-button-modern.ytp-button,.ytp-skip-ad-button';
-// ミュートボタン
-const muteButton = '.ytp-mute-button';
-// ミュートボタンSVG
-const mutedSvg = '.ytp-svg-volume-animation-speaker';
 // AD module
-const adMod = '.video-ads.ytp-ad-module';
+const adMod = 'ytp-ad-module';
+// ミュートボタン
+const muteButton = 'ytp-mute-button';
+// ミュートボタンSVG
+const mutedSvg = 'ytp-svg-volume-animation-speaker';
 
-function $(selector, doc = document) {
-  return doc.querySelector(selector);
+function $(className, doc = document) {
+  return doc.getElementsByClassName(className ?? '')[0];
 }
 
-function isDisplay(target$) {
-  return target$.style.getPropertyValue('display') !== 'none';
+function isDisplayNone(target$) {
+  return target$?.style.getPropertyValue('display') === 'none';
 }
 
 function isMuted() {
-  // ミュートボタン
   return !$(mutedSvg);
 }
 
@@ -50,34 +45,46 @@ function mute(shouldMute) {
   }
 }
 
-function clickSkip() {
-  $(skipButton)?.click();
+function getSkipButton() {
+  const className = [...new Set([...$(adMod).getElementsByTagName('button')].flatMap((btn) => [...btn.classList]))].find((n) => n.includes('skip'));
+  return $(className);
+}
+
+function getVisibilityParent(target$) {
+  if (!target$) {
+    return undefined;
+  }
+  if (isDisplayNone(target$)) {
+    return target$;
+  }
+  return getVisibilityParent(target$.parentElement);
 }
 
 async function readySkip() {
   mute(true);
 
-  // スキップボタン親要素
-  const target$ = $(skipButtonParent);
+  const skipButton$ = getSkipButton();
+  // スキップボタン／親要素
+  const target$ = getVisibilityParent(skipButton$);
 
   if (!target$) {
     return undefined;
   }
 
-  if (isDisplay(target$)) {
-    clickSkip();
+  if (!isDisplayNone(target$)) {
+    skipButton$.click();
     return undefined;
   }
 
   return new Promise((resolve) => {
     let timer;
     const callback = ([record], observer) => {
-      if (!isDisplay(record?.target)) {
+      if (isDisplayNone(record?.target)) {
         return;
       }
       clearTimeout(timer);
       observer.disconnect();
-      clickSkip();
+      skipButton$.click();
       resolve();
     };
 
