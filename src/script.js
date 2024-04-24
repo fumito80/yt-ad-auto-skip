@@ -21,12 +21,6 @@ function isMuted() {
   return !$(mutedSvg);
 }
 
-function setObserver(target$, callback, filter) {
-  const observer = (new MutationObserver(callback));
-  observer.observe(target$, filter);
-  return observer;
-}
-
 function mute(shouldMute) {
   const mute$ = $(muteButton);
   const muted = isMuted();
@@ -45,6 +39,18 @@ function mute(shouldMute) {
   }
 }
 
+function getVideoEl() {
+  return $('html5-main-video');
+}
+
+function setPlaybackRate(rate) {
+  getVideoEl().playbackRate = rate;
+}
+
+function getPlaybackRate() {
+  return getVideoEl().playbackRate;
+}
+
 function getSkipButton() {
   const className = [...new Set([...$(adMod).getElementsByTagName('button')].flatMap((btn) => [...btn.classList]))].find((n) => n.includes('skip'));
   return $(className);
@@ -60,7 +66,14 @@ function getVisibilityParent(target$) {
   return getVisibilityParent(target$.parentElement);
 }
 
+function setObserver(target$, callback, filter) {
+  const observer = (new MutationObserver(callback));
+  observer.observe(target$, filter);
+  return observer;
+}
+
 async function readySkip() {
+  setPlaybackRate(16);
   mute(true);
 
   const skipButton$ = getSkipButton();
@@ -103,9 +116,9 @@ async function readySkip() {
 
 function run(isInit) {
   // Ad module
-  const $adModOuter = $(adMod);
+  const adMod$ = $(adMod);
 
-  if (!$adModOuter) {
+  if (!adMod$) {
     if (isInit) {
       setTimeout(run, 3000);
     }
@@ -113,17 +126,18 @@ function run(isInit) {
   }
 
   let muted = isMuted();
+  let defer = Promise.resolve(true);
+  let playbackRate = getPlaybackRate();
 
-  if ($adModOuter.children.length > 0) {
+  if (adMod$.children.length > 0) {
     readySkip();
   }
 
-  let defer = Promise.resolve(true);
-
   setObserver(
-    $adModOuter,
+    adMod$,
     ([record]) => {
       if (!record?.addedNodes?.length) {
+        setPlaybackRate(playbackRate);
         if (!muted) {
           mute(false);
         }
@@ -139,6 +153,7 @@ function run(isInit) {
           return undefined;
         }
         muted = isMuted();
+        playbackRate = getPlaybackRate();
         return readySkip();
       });
     },
