@@ -52,7 +52,9 @@ function getPlaybackRate() {
 }
 
 function getSkipButton() {
-  const className = [...new Set([...$(adMod).getElementsByTagName('button')].flatMap((btn) => [...btn.classList]))].find((n) => n.includes('skip'));
+  const className = [...$(adMod).getElementsByTagName('button')]
+    .flatMap((btn) => [...btn.classList])
+    .find((n) => n.includes('skip'));
   return $(className);
 }
 
@@ -73,8 +75,8 @@ function setObserver(target$, callback, filter) {
 }
 
 async function readySkip() {
-  setPlaybackRate(16);
   mute(true);
+  setPlaybackRate(16);
 
   const skipButton$ = getSkipButton();
   // スキップボタン／親要素
@@ -137,10 +139,10 @@ function run(isInit) {
     adMod$,
     ([record]) => {
       if (!record?.addedNodes?.length) {
-        setPlaybackRate(playbackRate);
         if (!muted) {
           mute(false);
         }
+        setPlaybackRate(playbackRate);
         defer = defer.then(() => true);
         return;
       }
