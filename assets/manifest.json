@@ -1,7 +1,7 @@
 {
-  "version": "0.6.0",
-  "name": "YT Ad Minimizer",
-  "description": "Automate mute, fast forward, and the \"Skip\" button clicks on YouTube ads.",
+  "version": "0.6.1",
+  "name": "YT Ad-min",
+  "description": "Automate mute, fast-forward, and click the \"Skip\" button on YouTube ads.",
   "manifest_version": 3,
   "icons": {
     "128": "promo128.png"
