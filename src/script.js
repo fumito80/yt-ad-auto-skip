@@ -6,8 +6,6 @@ chrome.runtime.onMessage.addListener((_, __, sendMessage) => {
 const adMod = 'ytp-ad-module';
 // ミュートボタン
 const muteButton = 'ytp-mute-button';
-// ミュートボタンSVG
-const mutedSvg = 'ytp-svg-volume-animation-speaker';
 
 function $(className, doc = document) {
   return doc.getElementsByClassName(className ?? '')[0];
@@ -15,28 +13,6 @@ function $(className, doc = document) {
 
 function isDisplayNone(target$) {
   return target$?.style.getPropertyValue('display') === 'none';
-}
-
-function isMuted() {
-  return !$(mutedSvg);
-}
-
-function mute(shouldMute) {
-  const mute$ = $(muteButton);
-  const muted = isMuted();
-  /// #if mode == 'development'
-  // eslint-disable-next-line no-console
-  console.log('mute', { shouldMute, muted });
-  /// #endif
-  if (shouldMute) {
-    if (!muted) {
-      mute$.click();
-    }
-    return;
-  }
-  if (muted) {
-    mute$.click();
-  }
 }
 
 function getVideoEl() {
@@ -66,6 +42,28 @@ function getVisibilityParent(target$) {
     return target$;
   }
   return getVisibilityParent(target$.parentElement);
+}
+
+function isMuted() {
+  return getVideoEl().muted;
+}
+
+function mute(shouldMute) {
+  const mute$ = $(muteButton);
+  const muted = isMuted();
+  /// #if mode == 'development'
+  // eslint-disable-next-line no-console
+  console.log('mute', { shouldMute, muted });
+  /// #endif
+  if (shouldMute) {
+    if (!muted) {
+      mute$.click();
+    }
+    return;
+  }
+  if (muted) {
+    mute$.click();
+  }
 }
 
 function setObserver(target$, callback, filter) {
@@ -139,10 +137,10 @@ function run(isInit) {
     adMod$,
     ([record]) => {
       if (!record?.addedNodes?.length) {
+        setPlaybackRate(playbackRate);
         if (!muted) {
           mute(false);
         }
-        setPlaybackRate(playbackRate);
         defer = defer.then(() => true);
         return;
       }
