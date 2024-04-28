@@ -6,6 +6,12 @@
   "icons": {
     "128": "promo128.png"
   },
+  "action": {
+    "default_icon": {
+      "128": "icon128-dis.png"
+    },
+    "default_title": "Click Me"
+  },
   "content_scripts": [
     {
       "matches": [
