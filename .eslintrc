@@ -15,6 +15,7 @@
       {
         "js": "never"
       }
-    ]
+    ],
+    "no-console": ["error", { "allow": ["log"] }]
   }
 }

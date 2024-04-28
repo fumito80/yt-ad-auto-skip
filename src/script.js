@@ -52,7 +52,6 @@ function mute(shouldMute) {
   const mute$ = $(muteButton);
   const muted = isMuted();
   /// #if mode == 'development'
-  // eslint-disable-next-line no-console
   console.log('mute', { shouldMute, muted });
   /// #endif
   if (shouldMute) {
@@ -115,12 +114,16 @@ async function readySkip() {
 }
 
 function run(isInit) {
+  /// #if mode == 'development'
+  console.log('run');
+  /// #endif
+
   // Ad module
   const adMod$ = $(adMod);
 
   if (!adMod$) {
     if (isInit) {
-      setTimeout(run, 3000);
+      setTimeout(run, 1000);
     }
     return;
   }
@@ -131,6 +134,9 @@ function run(isInit) {
 
   if (adMod$.children.length > 0) {
     readySkip();
+    /// #if mode == 'development'
+    console.log('adMod$.children.length > 0');
+    /// #endif
   }
 
   setObserver(
@@ -145,7 +151,6 @@ function run(isInit) {
         return;
       }
       /// #if mode == 'development'
-      // eslint-disable-next-line no-console
       console.log('observe', (new Date()).toLocaleTimeString(), defer);
       /// #endif
       defer = defer.then((restart) => {
@@ -160,6 +165,10 @@ function run(isInit) {
     { childList: true },
   );
 }
+
+/// #if mode == 'development'
+console.log('window.scripting', window.scripting);
+/// #endif
 
 if (!window.scripting) {
   window.scripting = 'done';

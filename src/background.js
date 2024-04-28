@@ -7,10 +7,16 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
   const { msg } = await chrome.tabs.sendMessage(tabId, {}).catch(() => ({}));
   if (msg === 'done') {
+    /// #if mode == 'development'
+    console.log('msg', msg);
+    /// #endif
     return;
   }
-  chrome.scripting.executeScript({
+  const promise = chrome.scripting.executeScript({
     target: { tabId },
     files: ['script.js'],
   });
+  /// #if mode == 'development'
+  promise.then((result) => console.log('executeScript: result', result));
+  /// #endif
 });
