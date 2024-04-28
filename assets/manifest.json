@@ -1,11 +1,22 @@
 {
-  "version": "0.6.1",
+  "version": "0.7.0",
   "name": "YT Ad-min",
   "description": "Automate mute, fast-forward, and click the \"Skip\" button on YouTube ads.",
   "manifest_version": 3,
   "icons": {
     "128": "promo128.png"
   },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/watch*"
+      ],
+      "js": [
+        "script.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
   "background": {
     "service_worker": "background.js"
   },
