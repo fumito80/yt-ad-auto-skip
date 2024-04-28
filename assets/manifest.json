@@ -8,9 +8,10 @@
   },
   "action": {
     "default_icon": {
-      "128": "icon128-dis.png"
+      "128": "icon128.png"
     },
-    "default_title": "Click Me"
+    "default_title": "YT Ad-min settings",
+    "default_popup": "popup.html"
   },
   "content_scripts": [
     {
@@ -27,7 +28,8 @@
     "service_worker": "background.js"
   },
   "permissions": [
-    "scripting"
+    "scripting",
+    "storage"
   ],
   "host_permissions": [
     "https://www.youtube.com/*"

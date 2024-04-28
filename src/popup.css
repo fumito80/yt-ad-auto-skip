@@ -1,0 +1,40 @@
+@import "bootstrap/scss/bootstrap";
+
+body {
+  padding: 10px 20px 20px 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  white-space: nowrap;
+
+  >div:first-child~div {
+    line-height: 2.2em;
+  }
+
+  &.initialize .form-switch .form-check-input {
+    transition: none;
+  }
+}
+
+.caption {
+  font-size: 1.6em;
+  font-weight: bold;
+}
+
+.form-switch {
+  margin-left: 0;
+  padding-left: 0;
+
+  & .form-check-input {
+    margin-left: 1em;
+  }
+
+  label {
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    width: min-content;
+  }
+}
+
+.playback-rates>label {
+  border-radius: 50px;
+}

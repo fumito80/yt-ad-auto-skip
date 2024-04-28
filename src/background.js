@@ -20,3 +20,18 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   promise.then((result) => console.log('executeScript: result', result));
   /// #endif
 });
+
+function setIcon(enabled) {
+  const path = enabled ? 'icon128.png' : 'icon128-dis.png';
+  chrome.action.setIcon({ path });
+}
+
+chrome.storage.local.get().then(({ enabled = true }) => {
+  setIcon(enabled);
+});
+
+chrome.runtime.onMessage.addListener(({ msg, value }) => {
+  if (msg === 'set-icon') {
+    setIcon(value);
+  }
+});
