@@ -1,6 +1,6 @@
 {
-  "version": "0.7.0",
-  "name": "YT Ad-min",
+  "version": "0.8.0",
+  "name": "YT Ad Max",
   "description": "Automate mute, fast-forward, and click the \"Skip\" button on YouTube ads.",
   "manifest_version": 3,
   "icons": {
@@ -8,9 +8,9 @@
   },
   "action": {
     "default_icon": {
-      "128": "icon128.png"
+      "48": "icon48.png"
     },
-    "default_title": "YT Ad-min settings",
+    "default_title": "YT Ad Max options",
     "default_popup": "popup.html"
   },
   "content_scripts": [

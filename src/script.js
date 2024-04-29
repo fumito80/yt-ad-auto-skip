@@ -1,7 +1,3 @@
-chrome.runtime.onMessage.addListener((_, __, sendMessage) => {
-  sendMessage({ msg: 'done' });
-});
-
 // AD module
 const adMod = 'ytp-ad-module';
 // ミュートボタン
@@ -71,9 +67,44 @@ function setObserver(target$, callback, filter) {
   return observer;
 }
 
-async function readySkip() {
-  mute(true);
-  setPlaybackRate(16);
+async function getOptions() {
+  return chrome.storage.local.get();
+}
+
+function getChannelInfo() {
+  let title;
+  let channelId$;
+  const [channelImg$, channelInfo1$] = document.querySelectorAll('ytd-video-owner-renderer a');
+  const img = channelImg$?.querySelector('img').src;
+  if (channelInfo1$) {
+    channelId$ = channelImg$;
+    title = channelInfo1$.textContent;
+  } else {
+    const channelInfo2$ = document.querySelector('[itemprop="author"]');
+    channelId$ = channelInfo2$.querySelector('[itemprop="url"]');
+    title = channelInfo2$.querySelector('[itemprop="name"]')?.getAttribute('content');
+  }
+  const [, channelId] = /(?<=\/)([^/]+$)/.exec(channelId$.href) || [];
+  return { channelId, title, img };
+}
+
+function checkExcludeChannel(exChannels) {
+  const channelInfo = getChannelInfo();
+  const result = exChannels.some(([id]) => id === channelInfo.channelId);
+  /// #if mode == 'development'
+  console.log('checkExcludeChannel', result, channelInfo);
+  /// #endif
+  return result;
+}
+
+async function readySkip(options) {
+  if (options.mute) mute(true);
+
+  setPlaybackRate(options.playbackRate ?? 1);
+
+  if (!options.skip) {
+    return undefined;
+  }
 
   const skipButton$ = getSkipButton();
   // スキップボタン／親要素
@@ -113,7 +144,7 @@ async function readySkip() {
   });
 }
 
-function run(isInit) {
+async function run(isInit) {
   /// #if mode == 'development'
   console.log('run');
   /// #endif
@@ -131,9 +162,12 @@ function run(isInit) {
   let muted = isMuted();
   let defer = Promise.resolve(true);
   let playbackRate = getPlaybackRate();
+  let options = await getOptions();
 
-  if (adMod$.children.length > 0) {
-    readySkip();
+  const isExcludeChannel = checkExcludeChannel(options.exChannels);
+
+  if (adMod$.children.length > 0 && options.enabled && !isExcludeChannel) {
+    readySkip(options);
     /// #if mode == 'development'
     console.log('adMod$.children.length > 0');
     /// #endif
@@ -141,7 +175,7 @@ function run(isInit) {
 
   setObserver(
     adMod$,
-    ([record]) => {
+    async ([record]) => {
       if (!record?.addedNodes?.length) {
         setPlaybackRate(playbackRate);
         if (!muted) {
@@ -153,18 +187,34 @@ function run(isInit) {
       /// #if mode == 'development'
       console.log('observe', (new Date()).toLocaleTimeString(), defer);
       /// #endif
+      options = await getOptions();
+      if (!options.enabled || checkExcludeChannel(options.exChannels)) {
+        /// #if mode == 'development'
+        console.log('disable skip', options.enabled);
+        /// #endif
+        return;
+      }
       defer = defer.then((restart) => {
         if (!restart) {
           return undefined;
         }
         muted = isMuted();
         playbackRate = getPlaybackRate();
-        return readySkip();
+        return readySkip(options);
       });
     },
     { childList: true },
   );
 }
+
+chrome.runtime.onMessage.addListener(({ msg }, __, sendResponse) => {
+  if (msg !== 'get-channel-info') {
+    sendResponse({ msg: 'done' });
+    return;
+  }
+  const channelInfo = getChannelInfo();
+  sendResponse(channelInfo);
+});
 
 /// #if mode == 'development'
 console.log('window.scripting', window.scripting);

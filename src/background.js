@@ -22,16 +22,27 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 });
 
 function setIcon(enabled) {
-  const path = enabled ? 'icon128.png' : 'icon128-dis.png';
+  const path = enabled ? 'icon48.png' : 'icon48-dis.png';
   chrome.action.setIcon({ path });
 }
-
-chrome.storage.local.get().then(({ enabled = true }) => {
-  setIcon(enabled);
-});
 
 chrome.runtime.onMessage.addListener(({ msg, value }) => {
   if (msg === 'set-icon') {
     setIcon(value);
   }
+});
+
+chrome.storage.local.get().then(({ enabled }) => {
+  if (enabled != null) {
+    setIcon(enabled);
+    return;
+  }
+  chrome.storage.local.set({
+    enabled: true,
+    mute: true,
+    skip: true,
+    playbackRate: 16,
+    exChannels: [],
+  });
+  setIcon(true);
 });

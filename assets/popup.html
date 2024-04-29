@@ -6,41 +6,49 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="popup.css">
   <script type="module" src="popup.js" defer></script>
-  <title>YT Ad-min</title>
+  <title>YT Ad Max</title>
 </head>
 
-<body class="initialize">
-  <div class="form-switch border-bottom mb-3">
-    <label>
-      <div class="caption">YT Ad-min</div>
-      <input class="form-check-input app-enabled" type="checkbox" role="switch">
-    </label>
-  </div>
-  <div class="form-switch">
-    <label>
-      <div>Mute</div>
-      <input class="form-check-input muted" type="checkbox" role="switch">
-    </label>
-  </div>
-  <div class="form-switch">
-    <label>
-      <div>Skip</div>
-      <input class="form-check-input skip" type="checkbox" role="switch">
-    </label>
-  </div>
-  <div class="fw-bold">Playback Rate</div>
-  <div class="playback-rates">
-    <input type="radio" class="btn-check" name="playback-rate" id="option1" autocomplete="off" value="1">
-    <label class="btn btn-outline-primary btn-sm" for="option1">1x</label>
-    <input type="radio" class="btn-check" name="playback-rate" id="option2" autocomplete="off" value="2">
-    <label class="btn btn-outline-primary btn-sm" for="option2">2x</label>
-    <input type="radio" class="btn-check" name="playback-rate" id="option3" autocomplete="off" value="4">
-    <label class="btn btn-outline-primary btn-sm" for="option3">4x</label>
-    <input type="radio" class="btn-check" name="playback-rate" id="option4" autocomplete="off" value="8">
-    <label class="btn btn-outline-primary btn-sm" for="option4">8x</label>
-    <input type="radio" class="btn-check" name="playback-rate" id="option5" autocomplete="off" value="16">
-    <label class="btn btn-outline-primary btn-sm" for="option5">16x</label>
-  </div>
+<body>
+  <main class="initialize">
+    <div class="form-switch border-bottom mb-2 pb-2">
+      <label class="header">
+        <img src="promo128.png" alt="YT Ad Max" width="42" height="42">
+        <div>Enabled</div>
+        <input class="form-check-input app-enabled fs-4 mt-0" type="checkbox" role="switch">
+      </label>
+    </div>
+    <div class="form-switch">
+      <label>
+        <div class="w-2">Mute</div>
+        <input class="form-check-input mute" type="checkbox" role="switch">
+      </label>
+    </div>
+    <div class="form-switch">
+      <label>
+        <div class="w-2">Skip</div>
+        <input class="form-check-input skip" type="checkbox" role="switch">
+      </label>
+    </div>
+    <div class="fw-bold">Playback Rate</div>
+    <div class="playback-rates">
+      <input type="radio" class="btn-check" name="playback-rate" id="option1" autocomplete="off" value="1">
+      <label class="btn btn-outline-primary btn-sm" for="option1">1x</label>
+      <input type="radio" class="btn-check" name="playback-rate" id="option2" autocomplete="off" value="2">
+      <label class="btn btn-outline-primary btn-sm" for="option2">2x</label>
+      <input type="radio" class="btn-check" name="playback-rate" id="option3" autocomplete="off" value="4">
+      <label class="btn btn-outline-primary btn-sm" for="option3">4x</label>
+      <input type="radio" class="btn-check" name="playback-rate" id="option4" autocomplete="off" value="8">
+      <label class="btn btn-outline-primary btn-sm" for="option4">8x</label>
+      <input type="radio" class="btn-check" name="playback-rate" id="option5" autocomplete="off" value="16">
+      <label class="btn btn-outline-primary btn-sm" for="option5">16x</label>
+    </div>
+    <div class="border-top mt-3 pt-2 mb-2">
+      <span class="fw-bold">Exclude Channels</span>
+      <button type="button" class="btn btn-primary btn-sm add-exchannel ms-2" disabled>Add</button>
+    </div>
+    <div class="ex-channels"></div>
+  </main>
 </body>
 
 </html>

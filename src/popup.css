@@ -3,9 +3,17 @@
 body {
   padding: 10px 20px 20px 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+main {
+  display: grid;
+  height: 100%;
+  min-width: 250px;
+  max-height: 560px;
+  grid-template-rows: min-content min-content min-content min-content min-content min-content minmax(0, 100%);
   white-space: nowrap;
 
-  >div:first-child~div {
+  >div:first-child~* {
     line-height: 2.2em;
   }
 
@@ -14,17 +22,12 @@ body {
   }
 }
 
-.caption {
-  font-size: 1.6em;
-  font-weight: bold;
-}
-
 .form-switch {
   margin-left: 0;
   padding-left: 0;
 
   & .form-check-input {
-    margin-left: 1em;
+    margin-left: 0.6em;
   }
 
   label {
@@ -35,6 +38,69 @@ body {
   }
 }
 
+.header {
+  width: 100% !important;
+  justify-content: flex-start;
+
+  >div {
+    margin-left: auto;
+  }
+}
+
 .playback-rates>label {
   border-radius: 50px;
+}
+
+.w-2 {
+  width: 2.6em;
+}
+
+.ex-channels {
+  display: grid;
+  gap: 5px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-width: 300px;
+  margin-right: -0.5em;
+
+  >div {
+    text-indent: 2.0em;
+    height: 1.7em;
+    line-height: 1.7em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background-repeat: no-repeat;
+    background-size: contain;
+    position: relative;
+
+    button {
+      padding: 0;
+      position: absolute;
+      right: 2px;
+      height: 100%;
+      width: 2.0em;
+      display: none;
+    }
+
+    &:hover {
+      /* background-color: #e8e8e9; */
+
+      button {
+        display: unset;
+      }
+    }
+  }
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.4);
+  }
 }
