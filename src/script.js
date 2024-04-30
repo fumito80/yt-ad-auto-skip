@@ -163,8 +163,11 @@ async function run(isInit) {
   let defer = Promise.resolve(true);
   let playbackRate = getPlaybackRate();
   let options = await getOptions();
+  let isExcludeChannel = checkExcludeChannel(options.exChannels);
 
-  const isExcludeChannel = checkExcludeChannel(options.exChannels);
+  /// #if mode == 'development'
+  console.log('isExcludeChannel', isExcludeChannel);
+  /// #endif
 
   if (adMod$.children.length > 0 && options.enabled && !isExcludeChannel) {
     readySkip(options);
@@ -188,10 +191,11 @@ async function run(isInit) {
       console.log('observe', (new Date()).toLocaleTimeString(), defer);
       /// #endif
       options = await getOptions();
-      if (!options.enabled || checkExcludeChannel(options.exChannels)) {
-        /// #if mode == 'development'
-        console.log('disable skip', options.enabled);
-        /// #endif
+      if (!options.enabled) {
+        return;
+      }
+      isExcludeChannel = checkExcludeChannel(options.exChannels);
+      if (isExcludeChannel) {
         return;
       }
       defer = defer.then((restart) => {
@@ -208,12 +212,14 @@ async function run(isInit) {
 }
 
 chrome.runtime.onMessage.addListener(({ msg }, __, sendResponse) => {
-  if (msg !== 'get-channel-info') {
-    sendResponse({ msg: 'done' });
+  if (msg === 'get-channel-info') {
+    const channelInfo = getChannelInfo();
+    sendResponse(channelInfo);
     return;
   }
-  const channelInfo = getChannelInfo();
-  sendResponse(channelInfo);
+  if (msg === 'exists') {
+    sendResponse({ exists: true });
+  }
 });
 
 /// #if mode == 'development'
