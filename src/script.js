@@ -213,6 +213,10 @@ async function run(isInit) {
 
 chrome.runtime.onMessage.addListener(({ msg }, __, sendResponse) => {
   if (msg === 'get-channel-info') {
+    if (!document.URL.startsWith('https://www.youtube.com/watch')) {
+      sendResponse({});
+      return;
+    }
     const channelInfo = getChannelInfo();
     sendResponse(channelInfo);
     return;
