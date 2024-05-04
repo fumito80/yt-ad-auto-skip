@@ -81,6 +81,12 @@ main {
       height: 100%;
       width: 2.0em;
       display: none;
+
+      &::before {
+        content: '×';
+        font-size: 1.6em;
+        line-height: 0.8em;
+      }
     }
 
     &:hover {

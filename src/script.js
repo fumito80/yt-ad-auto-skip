@@ -81,8 +81,8 @@ function getChannelInfo() {
     title = channelInfo1$.textContent;
   } else {
     const channelInfo2$ = document.querySelector('[itemprop="author"]');
-    channelId$ = channelInfo2$.querySelector('[itemprop="url"]');
-    title = channelInfo2$.querySelector('[itemprop="name"]')?.getAttribute('content');
+    channelId$ = channelInfo2$?.querySelector('[itemprop="url"]');
+    title = channelInfo2$?.querySelector('[itemprop="name"]')?.getAttribute('content');
   }
   const [, channelId] = /(?<=\/)([^/]+$)/.exec(channelId$.href) || [];
   return { channelId, title, img };
@@ -144,7 +144,7 @@ async function readySkip(options) {
   });
 }
 
-async function run(isInit) {
+async function run(retries) {
   /// #if mode == 'development'
   console.log('run');
   /// #endif
@@ -153,8 +153,8 @@ async function run(isInit) {
   const adMod$ = $(adMod);
 
   if (!adMod$) {
-    if (isInit) {
-      setTimeout(run, 1000);
+    if (retries < 5) {
+      setTimeout(() => run(retries + 1), 500);
     }
     return;
   }
@@ -232,5 +232,5 @@ console.log('window.scripting', window.scripting);
 
 if (!window.scripting) {
   window.scripting = 'done';
-  run(true);
+  run(0);
 }

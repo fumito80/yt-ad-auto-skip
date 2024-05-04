@@ -21,7 +21,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (msg?.exists) {
     return;
   }
-  const promise = chrome.scripting.executeScript({
+  chrome.scripting.executeScript({
     target: { tabId },
     files: ['script.js'],
   });
@@ -37,16 +37,14 @@ chrome.runtime.onMessage.addListener(({ msg, value }, sender) => {
 });
 
 chrome.storage.local.get().then(({ enabled }) => {
-  if (enabled != null) {
-    setIcon(enabled);
-    return;
+  if (enabled == null) {
+    chrome.storage.local.set({
+      enabled: true,
+      mute: true,
+      skip: true,
+      playbackRate: 2,
+      exChannels: [],
+    });
   }
-  chrome.storage.local.set({
-    enabled: true,
-    mute: true,
-    skip: true,
-    playbackRate: 2,
-    exChannels: [],
-  });
-  setIcon(true);
+  setIcon(enabled == null || enabled);
 });
