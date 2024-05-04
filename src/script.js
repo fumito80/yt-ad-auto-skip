@@ -67,6 +67,10 @@ function setObserver(target$, callback, filter) {
   return observer;
 }
 
+function isWatchPage() {
+  return document.URL.startsWith('https://www.youtube.com/watch');
+}
+
 async function getOptions() {
   return chrome.storage.local.get();
 }
@@ -79,12 +83,12 @@ function getChannelInfo() {
   if (channelInfo1$) {
     channelId$ = channelImg$;
     title = channelInfo1$.textContent;
-  } else {
-    const channelInfo2$ = document.querySelector('[itemprop="author"]');
-    channelId$ = channelInfo2$.querySelector('[itemprop="url"]');
-    title = channelInfo2$.querySelector('[itemprop="name"]')?.getAttribute('content');
+    // } else if (is1stTime) {
+    //   const channelInfo2$ = document.querySelector('[itemprop="author"]');
+    //   channelId$ = channelInfo2$?.querySelector('[itemprop="url"]');
+    //   title = channelInfo2$?.querySelector('[itemprop="name"]')?.getAttribute('content');
   }
-  const [, channelId] = /(?<=\/)([^/]+$)/.exec(channelId$.href) || [];
+  const [, channelId] = /(?<=\/)([^/]+$)/.exec(channelId$?.href) || [];
   return { channelId, title, img };
 }
 
@@ -95,6 +99,15 @@ function checkExcludeChannel(exChannels) {
   console.log('checkExcludeChannel', result, channelInfo);
   /// #endif
   return result;
+}
+
+async function setBadge() {
+  const options = await getOptions();
+  if (!options.enabled) {
+    return;
+  }
+  const isExcludeChannel = checkExcludeChannel(options.exChannels);
+  chrome.runtime.sendMessage({ msg: 'set-badge-text', value: isExcludeChannel ? 'Ex' : '' });
 }
 
 async function readySkip(options) {
@@ -144,7 +157,7 @@ async function readySkip(options) {
   });
 }
 
-async function run(isInit) {
+async function run(retrys) {
   /// #if mode == 'development'
   console.log('run');
   /// #endif
@@ -153,8 +166,8 @@ async function run(isInit) {
   const adMod$ = $(adMod);
 
   if (!adMod$) {
-    if (isInit) {
-      setTimeout(run, 1000);
+    if (retrys < 5) {
+      setTimeout(() => run(retrys + 1), 1000);
     }
     return;
   }
@@ -209,11 +222,49 @@ async function run(isInit) {
     },
     { childList: true },
   );
+
+  const pageManager$ = document.querySelector('ytd-page-manager');
+  setObserver(pageManager$, async ([record]) => {
+    if (record?.addedNodes?.length) {
+      if (!isWatchPage()) {
+        return;
+      }
+      const watchFlrxy$ = document.querySelector('ytd-watch-flexy');
+      setObserver(watchFlrxy$, async ([record2]) => {
+        if (record2.target && !record2.target.hasAttribute('hidden')) {
+          /// #if mode == 'development'
+          console.log('setBadge 1');
+          /// #endif
+          setBadge();
+        }
+      }, {
+        childList: true,
+        // attributes: true,
+        // attributeFilter: ['hidden'],
+      });
+
+      const watchMetadata$ = document.querySelector('ytd-watch-metadata');
+      if (watchMetadata$.children.length) {
+        /// #if mode == 'development'
+        console.log('setBadge 2');
+        /// #endif
+        setBadge();
+      }
+      setObserver(watchMetadata$, async ([record2]) => {
+        /// #if mode == 'development'
+        console.log('setBadge 3');
+        /// #endif
+        setBadge();
+      }, {
+        childList: true,
+      });
+    }
+  }, { childList: true });
 }
 
 chrome.runtime.onMessage.addListener(({ msg }, __, sendResponse) => {
   if (msg === 'get-channel-info') {
-    if (!document.URL.startsWith('https://www.youtube.com/watch')) {
+    if (!isWatchPage()) {
       sendResponse({});
       return;
     }
@@ -232,5 +283,5 @@ console.log('window.scripting', window.scripting);
 
 if (!window.scripting) {
   window.scripting = 'done';
-  run(true);
+  run(0);
 }
