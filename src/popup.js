@@ -37,6 +37,7 @@ const skip$ = $('.skip');
 const playbackRates$ = $$('[name="playback-rate"]');
 const channels$ = $('.ex-channels');
 const tmplChannel$ = $('div', $('template').content);
+let tabId;
 
 const {
   enabled, playbackRate, mute, skip, exChannels,
@@ -52,6 +53,10 @@ function createChannelEl([id, title, img]) {
 
 function makeExChannels(channels) {
   channels$.append(...channels.map(createChannelEl));
+}
+
+function setBadgeText(text = '') {
+  chrome.action.setBadgeText({ tabId, text });
 }
 
 setChangeListener(appEnabled$, 'enabled', enabled, undefined, () => {
@@ -80,17 +85,11 @@ if (exChannels.length) {
   makeExChannels(exChannels);
 }
 
-channels$.addEventListener('click', async (e) => {
-  if (e.target.localName === 'button') {
-    const target = e.target.parentElement;
-    const channels = await chrome.storage.local.get('exChannels');
-    await saveChannels(channels.exChannels, target.id);
-    target.remove();
-  }
-});
-
 const { channelId, title, img } = await chrome.tabs.query({ currentWindow: true, active: true })
-  .then(([tab]) => chrome.tabs.sendMessage(tab.id, { msg: 'get-channel-info' }))
+  .then(([tab]) => {
+    tabId = tab.id;
+    return chrome.tabs.sendMessage(tabId, { msg: 'get-channel-info' });
+  })
   .catch(() => ({}));
 
 if (img) {
@@ -101,5 +100,18 @@ if (img) {
     await saveChannels(exChannels, channelId, [newChannel]);
     [...channels$.children].find((el) => el.id === channelId)?.remove();
     channels$.prepend(createChannelEl(newChannel));
+    setBadgeText('Ex');
   });
 }
+
+channels$.addEventListener('click', async (e) => {
+  if (e.target.localName === 'button') {
+    const target = e.target.parentElement;
+    const channels = await chrome.storage.local.get('exChannels');
+    await saveChannels(channels.exChannels, target.id);
+    target.remove();
+    if (channelId === target.id) {
+      setBadgeText();
+    }
+  }
+});

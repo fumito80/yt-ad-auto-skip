@@ -12,6 +12,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     return;
   }
   if (!tab.url?.startsWith('https://www.youtube.com/watch')) {
+    setBadgeText(tabId);
     return;
   }
   const msg = await chrome.tabs.sendMessage(tabId, { msg: 'exists' }).catch(() => ({}));
@@ -48,3 +49,6 @@ chrome.storage.local.get().then(({ enabled }) => {
   }
   setIcon(enabled == null || enabled);
 });
+
+chrome.action.setBadgeTextColor({ color: '#222222' });
+chrome.action.setBadgeBackgroundColor({ color: 'aliceblue' });

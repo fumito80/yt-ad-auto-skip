@@ -3,8 +3,14 @@ const adMod = 'ytp-ad-module';
 // ミュートボタン
 const muteButton = 'ytp-mute-button';
 
-function $(className, doc = document) {
+const promiseChannel = Promise.withResolvers();
+
+function $c(className, doc = document) {
   return doc.getElementsByClassName(className ?? '')[0];
+}
+
+function $q(className, doc = document) {
+  return doc.querySelector(className ?? '');
 }
 
 function isDisplayNone(target$) {
@@ -12,7 +18,7 @@ function isDisplayNone(target$) {
 }
 
 function getVideoEl() {
-  return $('html5-main-video');
+  return $c('html5-main-video');
 }
 
 function setPlaybackRate(rate) {
@@ -24,10 +30,10 @@ function getPlaybackRate() {
 }
 
 function getSkipButton() {
-  const className = [...$(adMod).getElementsByTagName('button')]
+  const className = [...$c(adMod).getElementsByTagName('button')]
     .flatMap((btn) => [...btn.classList])
     .find((n) => n.includes('skip'));
-  return $(className);
+  return $c(className);
 }
 
 function getVisibilityParent(target$) {
@@ -45,7 +51,7 @@ function isMuted() {
 }
 
 function mute(shouldMute) {
-  const mute$ = $(muteButton);
+  const mute$ = $c(muteButton);
   const muted = isMuted();
   /// #if mode == 'development'
   console.log('mute', { shouldMute, muted });
@@ -62,9 +68,16 @@ function mute(shouldMute) {
 }
 
 function setObserver(target$, callback, filter) {
+  if (!target$) {
+    return {};
+  }
   const observer = (new MutationObserver(callback));
   observer.observe(target$, filter);
   return observer;
+}
+
+function isWatchPage() {
+  return document.URL.startsWith('https://www.youtube.com/watch');
 }
 
 async function getOptions() {
@@ -72,29 +85,35 @@ async function getOptions() {
 }
 
 function getChannelInfo() {
-  let title;
-  let channelId$;
-  const [channelImg$, channelInfo1$] = document.querySelectorAll('ytd-video-owner-renderer a');
-  const img = channelImg$?.querySelector('img').src;
-  if (channelInfo1$) {
-    channelId$ = channelImg$;
-    title = channelInfo1$.textContent;
-  } else {
-    const channelInfo2$ = document.querySelector('[itemprop="author"]');
-    channelId$ = channelInfo2$?.querySelector('[itemprop="url"]');
-    title = channelInfo2$?.querySelector('[itemprop="name"]')?.getAttribute('content');
+  const [channelImg$, channelInfo$] = document.querySelectorAll('ytd-video-owner-renderer a');
+  if (!channelImg$) {
+    return {};
   }
-  const [, channelId] = /(?<=\/)([^/]+$)/.exec(channelId$.href) || [];
+  const img = channelImg$?.querySelector('img').src;
+  const title = channelInfo$.textContent;
+  const [, channelId] = /(?<=\/)([^/]+$)/.exec(channelImg$.href) || [];
   return { channelId, title, img };
 }
 
-function checkExcludeChannel(exChannels) {
-  const channelInfo = getChannelInfo();
+async function checkExcludeChannel(exChannels) {
+  const channelInfo = await promiseChannel.promise;
   const result = exChannels.some(([id]) => id === channelInfo.channelId);
   /// #if mode == 'development'
   console.log('checkExcludeChannel', result, channelInfo);
   /// #endif
   return result;
+}
+
+async function setBadge() {
+  const channelInfo = getChannelInfo();
+  if (!channelInfo.channelId) {
+    return;
+  }
+  promiseChannel.resolve(channelInfo);
+  promiseChannel.promise = promiseChannel.promise.then(() => channelInfo);
+  const options = await getOptions();
+  const isExcludeChannel = options.exChannels.some(([id]) => id === channelInfo.channelId);
+  chrome.runtime.sendMessage({ msg: 'set-badge-text', value: isExcludeChannel ? 'Ex' : '' });
 }
 
 async function readySkip(options) {
@@ -144,16 +163,83 @@ async function readySkip(options) {
   });
 }
 
-async function run(retries) {
+function setChannelObserver(retries = 0) {
+  const pageManager$ = $q('ytd-page-manager');
+  if (!pageManager$) {
+    if (retries < 8) {
+      setTimeout(() => setChannelObserver(retries + 1), 500);
+    }
+    return;
+  }
+  setObserver(pageManager$, (_, observerPageManager) => {
+    /// #if mode == 'development'
+    console.log('Observe 1');
+    /// #endif
+    if (!isWatchPage()) {
+      return;
+    }
+    const watchMetadata$ = $q('ytd-watch-metadata');
+    if (!watchMetadata$) {
+      return;
+    }
+    observerPageManager.disconnect();
+    setObserver(watchMetadata$, (__, observerWatchMetadata) => {
+      /// #if mode == 'development'
+      console.log('Observe 2');
+      /// #endif
+      const formattedString$ = $q('ytd-video-owner-renderer #img');
+      if (!formattedString$) {
+        return;
+      }
+      observerWatchMetadata.disconnect();
+      setObserver(formattedString$, () => {
+        /// #if mode == 'development'
+        console.log('setBadge 1');
+        /// #endif
+        setBadge();
+      }, {
+        attributes: true,
+        attributeFilter: ['src'],
+      });
+      const watchFlexy$ = $q('ytd-watch-flexy');
+      setObserver(watchFlexy$, () => {
+        if (watchFlexy$.hasAttribute('hidden')) {
+          return;
+        }
+        /// #if mode == 'development'
+        console.log('setBadge 2');
+        /// #endif
+        setBadge();
+      }, {
+        attributes: true,
+        attributeFilter: ['hidden'],
+      });
+      if (formattedString$.src) {
+        /// #if mode == 'development'
+        console.log('setBadge 0');
+        /// #endif
+        setBadge();
+      }
+    }, {
+      childList: true,
+      subtree: true,
+    });
+  }, {
+    childList: true,
+    subtree: true,
+  });
+}
+
+async function run(retries = 0) {
   /// #if mode == 'development'
   console.log('run');
   /// #endif
 
   // Ad module
-  const adMod$ = $(adMod);
+  const adMod$ = $c(adMod);
 
   if (!adMod$) {
-    if (retries < 5) {
+    if (retries < 8) {
       setTimeout(() => run(retries + 1), 500);
     }
     return;
@@ -163,7 +249,10 @@ async function run(retries) {
   let defer = Promise.resolve(true);
   let playbackRate = getPlaybackRate();
   let options = await getOptions();
-  let isExcludeChannel = checkExcludeChannel(options.exChannels);
+
+  setChannelObserver();
+
+  let isExcludeChannel = await checkExcludeChannel(options.exChannels);
 
   /// #if mode == 'development'
   console.log('isExcludeChannel', isExcludeChannel);
@@ -194,7 +283,7 @@ async function run(retries) {
       if (!options.enabled) {
         return;
       }
-      isExcludeChannel = checkExcludeChannel(options.exChannels);
+      isExcludeChannel = await checkExcludeChannel(options.exChannels);
       if (isExcludeChannel) {
         return;
       }
@@ -213,17 +302,17 @@ async function run(retries) {
 
 chrome.runtime.onMessage.addListener(({ msg }, __, sendResponse) => {
   if (msg === 'get-channel-info') {
-    if (!document.URL.startsWith('https://www.youtube.com/watch')) {
+    if (!isWatchPage()) {
       sendResponse({});
-      return;
+      return false;
     }
-    const channelInfo = getChannelInfo();
-    sendResponse(channelInfo);
-    return;
+    promiseChannel.promise.then(sendResponse);
+    return true;
   }
   if (msg === 'exists') {
     sendResponse({ exists: true });
   }
+  return false;
 });
 
 /// #if mode == 'development'
@@ -232,5 +321,5 @@ console.log('window.scripting', window.scripting);
 
 if (!window.scripting) {
   window.scripting = 'done';
-  run(0);
+  run();
 }
