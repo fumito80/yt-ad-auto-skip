@@ -17,6 +17,37 @@ function isDisplayNone(target$) {
   return target$?.style.getPropertyValue('display') === 'none';
 }
 
+function tryUntilElement(fn, getter, times = 0) {
+  const el$ = getter();
+  if (el$) {
+    fn(el$);
+    return;
+  }
+  if (times > 10) {
+    return;
+  }
+  setTimeout(() => tryUntilElement(fn, getter, times + 1), 500);
+}
+
+async function getLocal() {
+  return chrome.storage.local.get();
+}
+
+function setObserver(target$, callback, filter) {
+  if (!target$) {
+    return {};
+  }
+  const observer = (new MutationObserver(callback));
+  observer.observe(target$, filter);
+  return observer;
+}
+
+async function promiseState(p) {
+  const t = {};
+  const v = await Promise.race([p, t]);
+  return (v === t) ? 'pending' : 'fulfilled';
+}
+
 function getVideoEl() {
   return $c('html5-main-video');
 }
@@ -67,21 +98,8 @@ function mute(shouldMute) {
   }
 }
 
-function setObserver(target$, callback, filter) {
-  if (!target$) {
-    return {};
-  }
-  const observer = (new MutationObserver(callback));
-  observer.observe(target$, filter);
-  return observer;
-}
-
 function isWatchPage() {
   return document.URL.startsWith('https://www.youtube.com/watch');
-}
-
-async function getOptions() {
-  return chrome.storage.local.get();
 }
 
 function getChannelInfo() {
@@ -111,8 +129,8 @@ async function setBadge() {
   }
   promiseChannel.resolve(channelInfo);
   promiseChannel.promise = promiseChannel.promise.then(() => channelInfo);
-  const options = await getOptions();
-  const isExcludeChannel = options.exChannels.some(([id]) => id === channelInfo.channelId);
+  const options = await getLocal();
+  const isExcludeChannel = await checkExcludeChannel(options.exChannels);
   chrome.runtime.sendMessage({ msg: 'set-badge-text', value: isExcludeChannel ? 'Ex' : '' });
 }
 
@@ -163,14 +181,7 @@ async function readySkip(options) {
   });
 }
 
-function setChannelObserver(retries = 0) {
-  const pageManager$ = $q('ytd-page-manager');
-  if (!pageManager$) {
-    if (retries < 8) {
-      setTimeout(() => setChannelObserver(retries + 1), 500);
-    }
-    return;
-  }
+function setChannelObserver(pageManager$) {
   setObserver(pageManager$, (_, observerPageManager) => {
     /// #if mode == 'development'
     console.log('Observe 1');
@@ -178,93 +189,54 @@ function setChannelObserver(retries = 0) {
     if (!isWatchPage()) {
       return;
     }
-    const watchMetadata$ = $q('ytd-watch-metadata');
-    if (!watchMetadata$) {
+    const formattedString$ = $q('ytd-video-owner-renderer #img', pageManager$);
+    if (!formattedString$) {
       return;
     }
-    observerPageManager.disconnect();
-    setObserver(watchMetadata$, (__, observerWatchMetadata) => {
+    if (formattedString$.src) {
       /// #if mode == 'development'
-      console.log('Observe 2');
+      console.log('setBadge 1');
       /// #endif
-      const formattedString$ = $q('ytd-video-owner-renderer #img');
-      if (!formattedString$) {
-        return;
-      }
-      observerWatchMetadata.disconnect();
-      setObserver(formattedString$, () => {
-        /// #if mode == 'development'
-        console.log('setBadge 1');
-        /// #endif
-        setBadge();
-      }, {
-        attributes: true,
-        attributeFilter: ['src'],
-      });
-      const watchFlexy$ = $q('ytd-watch-flexy');
-      setObserver(watchFlexy$, () => {
-        if (watchFlexy$.hasAttribute('hidden')) {
-          return;
-        }
-        /// #if mode == 'development'
-        console.log('setBadge 2');
-        /// #endif
-        setBadge();
-      }, {
-        attributes: true,
-        attributeFilter: ['hidden'],
-      });
+      setBadge();
+    }
+    setObserver(formattedString$, () => {
+      /// #if mode == 'development'
+      console.log('setBadge 2');
+      /// #endif
       if (formattedString$.src) {
-        /// #if mode == 'development'
-        console.log('setBadge 0');
-        /// #endif
         setBadge();
       }
     }, {
-      childList: true,
-      subtree: true,
+      attributes: true,
+      attributeFilter: ['src'],
     });
+    const watchFlexy$ = $q('ytd-watch-flexy');
+    if (!watchFlexy$) {
+      return;
+    }
+    setObserver(watchFlexy$, () => {
+      /// #if mode == 'development'
+      console.log('setBadge 3');
+      /// #endif
+      if (watchFlexy$.hasAttribute('hidden')) {
+        return;
+      }
+      setBadge();
+    }, {
+      attributes: true,
+      attributeFilter: ['hidden'],
+    });
+    observerPageManager.disconnect();
   }, {
     childList: true,
     subtree: true,
   });
 }
 
-async function run(retries = 0) {
-  /// #if mode == 'development'
-  console.log('run');
-  /// #endif
-
-  // Ad module
-  const adMod$ = $c(adMod);
-
-  if (!adMod$) {
-    if (retries < 8) {
-      setTimeout(() => run(retries + 1), 500);
-    }
-    return;
-  }
-
+function setAdObserver(adMod$) {
   let muted = isMuted();
   let defer = Promise.resolve(true);
   let playbackRate = getPlaybackRate();
-  let options = await getOptions();
-
-  setChannelObserver();
-
-  let isExcludeChannel = await checkExcludeChannel(options.exChannels);
-
-  /// #if mode == 'development'
-  console.log('isExcludeChannel', isExcludeChannel);
-  /// #endif
-
-  if (adMod$.children.length > 0 && options.enabled && !isExcludeChannel) {
-    readySkip(options);
-    /// #if mode == 'development'
-    console.log('adMod$.children.length > 0');
-    /// #endif
-  }
-
   setObserver(
     adMod$,
     async ([record]) => {
@@ -279,11 +251,11 @@ async function run(retries = 0) {
       /// #if mode == 'development'
       console.log('observe', (new Date()).toLocaleTimeString(), defer);
       /// #endif
-      options = await getOptions();
+      const options = await getLocal();
       if (!options.enabled) {
         return;
       }
-      isExcludeChannel = await checkExcludeChannel(options.exChannels);
+      const isExcludeChannel = await checkExcludeChannel(options.exChannels);
       if (isExcludeChannel) {
         return;
       }
@@ -298,6 +270,36 @@ async function run(retries = 0) {
     },
     { childList: true },
   );
+}
+
+async function run(adMod$) {
+  /// #if mode == 'development'
+  console.log('run');
+  /// #endif
+
+  tryUntilElement(setChannelObserver, () => $q('ytd-page-manager'));
+
+  setTimeout(() => promiseState(promiseChannel.promise).then((state) => {
+    if (state === 'pending') {
+      promiseChannel.resolve({});
+    }
+  }), 3000);
+
+  const options = await getLocal();
+  const isExcludeChannel = await checkExcludeChannel(options.exChannels);
+
+  /// #if mode == 'development'
+  console.log('isExcludeChannel', isExcludeChannel);
+  /// #endif
+
+  if (adMod$.children.length > 0 && options.enabled && !isExcludeChannel) {
+    readySkip(options);
+    /// #if mode == 'development'
+    console.log('adMod$.children.length > 0');
+    /// #endif
+  }
+
+  setAdObserver(adMod$);
 }
 
 chrome.runtime.onMessage.addListener(({ msg }, __, sendResponse) => {
@@ -321,5 +323,5 @@ console.log('window.scripting', window.scripting);
 
 if (!window.scripting) {
   window.scripting = 'done';
-  run();
+  tryUntilElement(run, () => $c(adMod));
 }

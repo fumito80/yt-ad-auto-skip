@@ -55,23 +55,34 @@ main {
   max-height: 300px;
   overflow-x: hidden;
   overflow-y: auto;
+  margin-left: -1em;
   margin-right: -0.5em;
 
   >div {
-    text-indent: 2.0em;
+    text-indent: 3.0em;
     line-height: 1.7em;
     overflow: hidden;
     text-overflow: ellipsis;
+    background-position-x: 1em;
     background-repeat: no-repeat;
     background-size: contain;
     position: relative;
 
-    &:before {
+    &:after {
       content: attr(title);
     }
 
     +div {
       margin-top: 5px;
+    }
+
+    &.current::before {
+      content: '●';
+      color: #0d6efd;
+      position: absolute;
+      left: -2.5em;
+      font-size: 1.2em;
+      line-height: 1.2em;
     }
 
     button {

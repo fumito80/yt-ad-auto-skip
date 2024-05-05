@@ -43,11 +43,12 @@ const {
   enabled, playbackRate, mute, skip, exChannels,
 } = await promiseSettings;
 
-function createChannelEl([id, title, img]) {
+function createChannelEl([id, title, img], addonClass = '') {
   const item$ = document.importNode(tmplChannel$, true);
   item$.id = id;
   item$.title = title;
   item$.style.backgroundImage = `url(${img})`;
+  item$.classList.add(addonClass);
   return item$;
 }
 
@@ -99,9 +100,12 @@ if (img) {
     const newChannel = [channelId, title, img];
     await saveChannels(exChannels, channelId, [newChannel]);
     [...channels$.children].find((el) => el.id === channelId)?.remove();
-    channels$.prepend(createChannelEl(newChannel));
+    channels$.prepend(createChannelEl(newChannel, 'current'));
     setBadgeText('Ex');
   });
+  const current = [...channels$.children].find((el) => el.id === channelId);
+  current?.classList.add('current');
+  current?.scrollIntoViewIfNeeded();
 }
 
 channels$.addEventListener('click', async (e) => {
