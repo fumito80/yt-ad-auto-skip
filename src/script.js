@@ -134,6 +134,14 @@ async function setBadge() {
   chrome.runtime.sendMessage({ msg: 'set-badge-text', value: isExcludeChannel ? 'Ex' : '' });
 }
 
+function resolveSkip([observer1, observer2], timer, skipButton$, resolve) {
+  clearTimeout(timer);
+  observer2.disconnect();
+  observer1.disconnect();
+  skipButton$.click();
+  resolve();
+}
+
 async function readySkip(options) {
   if (options.mute) mute(true);
 
@@ -158,24 +166,40 @@ async function readySkip(options) {
 
   return new Promise((resolve) => {
     let timer;
-    const callback = ([record], observer) => {
-      if (isDisplayNone(record?.target)) {
-        return;
-      }
-      clearTimeout(timer);
-      observer.disconnect();
-      skipButton$.click();
-      resolve();
-    };
+    const observers = [
+      setObserver(
+        target$,
+        ([record]) => {
+          if (isDisplayNone(record.target)) {
+            return;
+          }
+          resolveSkip(observers, timer, skipButton$, resolve);
+        },
+        {
+          attributes: true,
+          attributeFilter: ['style'],
+        },
+      ),
+      setObserver(
+        $c('html5-video-player'),
+        ([record]) => {
+          if (!record.target.classList.contains('ended-mode')) {
+            return;
+          }
+          /// #if mode == 'development'
+          console.log($c(adMod).outerHTML);
+          /// #endif
+          resolveSkip(observers, timer, skipButton$, resolve);
+        },
+        {
+          attributes: true,
+          attributeFilter: ['class'],
+        },
+      ),
+    ];
 
-    const filter = {
-      attributes: true,
-      attributeFilter: ['style'],
-    };
-
-    const observer = setObserver(target$, callback, filter);
     timer = setTimeout(() => {
-      observer.disconnect();
+      observers.forEach((observer) => observer.disconnect());
       resolve();
     }, 10000);
   });
@@ -301,9 +325,6 @@ async function run(adMod$) {
   if (adMod$.children.length > 0 && options.enabled && !isExcludeChannel) {
     /// #if mode == 'development'
     console.log('adMod$.children.length > 0');
-    /// #if mode == 'development'
-    console.log(adMod$.outerHTML);
-    /// #endif
     /// #endif
     readySkip(options);
   }
