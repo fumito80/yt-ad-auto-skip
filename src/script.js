@@ -233,10 +233,10 @@ function setChannelObserver(pageManager$) {
   });
 }
 
-function setAdObserver(adMod$) {
-  let muted = isMuted();
+function setAdObserver(adMod$, initMuted, initPlaybackRate) {
+  let muted = initMuted;
+  let playbackRate = initPlaybackRate;
   let defer = Promise.resolve(true);
-  let playbackRate = getPlaybackRate();
   setObserver(
     adMod$,
     async ([record]) => {
@@ -259,6 +259,9 @@ function setAdObserver(adMod$) {
       if (isExcludeChannel) {
         return;
       }
+      /// #if mode == 'development'
+      console.log(adMod$.outerHTML);
+      /// #endif
       defer = defer.then((restart) => {
         if (!restart) {
           return undefined;
@@ -285,6 +288,9 @@ async function run(adMod$) {
     }
   }), 3000);
 
+  const muted = isMuted();
+  const playbackRate = getPlaybackRate();
+
   const options = await getLocal();
   const isExcludeChannel = await checkExcludeChannel(options.exChannels);
 
@@ -293,13 +299,16 @@ async function run(adMod$) {
   /// #endif
 
   if (adMod$.children.length > 0 && options.enabled && !isExcludeChannel) {
-    readySkip(options);
     /// #if mode == 'development'
     console.log('adMod$.children.length > 0');
+    /// #if mode == 'development'
+    console.log(adMod$.outerHTML);
     /// #endif
+    /// #endif
+    readySkip(options);
   }
 
-  setAdObserver(adMod$);
+  setAdObserver(adMod$, muted, playbackRate);
 }
 
 chrome.runtime.onMessage.addListener(({ msg }, __, sendResponse) => {
