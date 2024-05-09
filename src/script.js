@@ -57,7 +57,7 @@ function setPlaybackRate(rate) {
 }
 
 function getPlaybackRate() {
-  return getVideoEl().playbackRate;
+  return parseFloat($c('ytp-bezel-text').textContent) || 1;
 }
 
 function getSkipButton() {
@@ -138,7 +138,7 @@ function resolveSkip([observer1, observer2], timer, skipButton$, resolve) {
   clearTimeout(timer);
   observer2.disconnect();
   observer1.disconnect();
-  skipButton$.click();
+  skipButton$?.click();
   resolve();
 }
 
@@ -156,6 +156,7 @@ async function readySkip(options) {
   const target$ = getVisibilityParent(skipButton$);
 
   if (!target$) {
+    skipButton$?.click();
     return undefined;
   }
 
@@ -187,9 +188,9 @@ async function readySkip(options) {
             return;
           }
           /// #if mode == 'development'
-          console.log($c(adMod).outerHTML);
+          console.log('html5-video-player: ended-mode', $c(adMod).outerHTML);
           /// #endif
-          resolveSkip(observers, timer, skipButton$, resolve);
+          resolveSkip(observers, timer, getSkipButton(), resolve);
         },
         {
           attributes: true,
