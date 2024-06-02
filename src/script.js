@@ -17,16 +17,18 @@ function isDisplayNone(target$) {
   return target$?.style.getPropertyValue('display') === 'none';
 }
 
-function tryUntilElement(fn, getter, times = 0) {
+function tryUntilElement(fn, getter, resolver = () => { }, times = 0) {
   const el$ = getter();
   if (el$) {
     fn(el$);
+    resolver(el$);
     return;
   }
   if (times > 10) {
+    resolver();
     return;
   }
-  setTimeout(() => tryUntilElement(fn, getter, times + 1), 500);
+  setTimeout(() => tryUntilElement(fn, getter, resolver, times + 1), 500);
 }
 
 async function getLocal() {
@@ -37,7 +39,7 @@ function setObserver(target$, callback, filter) {
   if (!target$) {
     return {};
   }
-  const observer = (new MutationObserver(callback));
+  const observer = new MutationObserver(callback);
   observer.observe(target$, filter);
   return observer;
 }
@@ -333,6 +335,14 @@ async function run(adMod$) {
   setAdObserver(adMod$, muted, playbackRate);
 }
 
+window.adMod$ = undefined;
+
+async function rerun() {
+  window.adMod$ = await new Promise((resolve) => {
+    tryUntilElement(run, () => $c(adMod), resolve);
+  });
+}
+
 chrome.runtime.onMessage.addListener(({ msg }, __, sendResponse) => {
   if (msg === 'get-channel-info') {
     if (!isWatchPage()) {
@@ -344,6 +354,9 @@ chrome.runtime.onMessage.addListener(({ msg }, __, sendResponse) => {
   }
   if (msg === 'exists') {
     sendResponse({ exists: true });
+    if (window.adMod$ !== $c(adMod)) {
+      rerun();
+    }
   }
   return false;
 });
@@ -354,5 +367,5 @@ console.log('window.scripting', window.scripting);
 
 if (!window.scripting) {
   window.scripting = 'done';
-  tryUntilElement(run, () => $c(adMod));
+  rerun();
 }
