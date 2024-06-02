@@ -1,0 +1,123 @@
+@import "bootstrap/scss/bootstrap";
+
+body {
+  padding: 10px 20px 20px 20px;
+  min-width: min-content;
+  white-space: nowrap;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+main {
+  >div {
+    line-height: 2.2em;
+  }
+
+  &.initialize .form-switch .form-check-input {
+    transition: none;
+  }
+}
+
+.form-switch {
+  margin-left: 0;
+  padding-left: 0;
+
+  & .form-check-input {
+    margin-left: 0.6em;
+  }
+
+  label {
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    width: min-content;
+  }
+}
+
+.header {
+  width: 100% !important;
+  justify-content: flex-start;
+
+  >div {
+    margin-left: auto;
+  }
+}
+
+.playback-rates>label {
+  border-radius: 50px;
+}
+
+.w-2 {
+  width: 2.6em;
+}
+
+.ex-channels {
+  max-width: 250px;
+  max-height: 300px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  margin-left: -1em;
+  margin-right: -0.5em;
+
+  >div {
+    text-indent: 3.0em;
+    line-height: 1.7em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background-position-x: 1em;
+    background-repeat: no-repeat;
+    background-size: contain;
+    position: relative;
+
+    &:after {
+      content: attr(title);
+    }
+
+    +div {
+      margin-top: 5px;
+    }
+
+    &.current::before {
+      content: '●';
+      color: #0d6efd;
+      position: absolute;
+      left: -2.5em;
+      font-size: 1.2em;
+      line-height: 1.2em;
+    }
+
+    button {
+      padding: 0;
+      position: absolute;
+      right: 2px;
+      height: 100%;
+      width: 2.0em;
+      display: none;
+
+      &::before {
+        content: '×';
+        font-size: 1.6em;
+        line-height: 0.8em;
+      }
+    }
+
+    &:hover {
+
+      button {
+        display: unset;
+      }
+    }
+  }
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.4);
+  }
+}
