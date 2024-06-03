@@ -42,8 +42,8 @@ main {
   }
 }
 
-.playback-rates>label {
-  border-radius: 50px;
+.playback-rates label {
+  border-radius: 100vh;
 }
 
 .w-2 {

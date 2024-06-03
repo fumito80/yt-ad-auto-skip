@@ -76,6 +76,10 @@ playbackRates$.forEach((el) => {
   el.checked = Number(el.value) === playbackRate;
   el.addEventListener('change', () => {
     const { value } = playbackRates$.find((el2) => el2.checked);
+    if (value !== '1') {
+      // eslint-disable-next-line no-alert
+      alert(el.parentElement.title);
+    }
     setStorage('playbackRate', Number(value));
   });
 });

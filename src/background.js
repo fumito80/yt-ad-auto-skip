@@ -43,7 +43,7 @@ chrome.storage.local.get().then(({ enabled }) => {
       enabled: true,
       mute: true,
       skip: true,
-      playbackRate: 2,
+      playbackRate: 1,
       exChannels: [],
     });
   }
