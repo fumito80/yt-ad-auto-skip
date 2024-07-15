@@ -136,12 +136,18 @@ async function setBadge() {
   chrome.runtime.sendMessage({ msg: 'set-badge-text', value: isExcludeChannel ? 'Ex' : '' });
 }
 
+function skip(skipButton$, resolve = () => {}) {
+  setTimeout(() => {
+    skipButton$?.click();
+    resolve();
+  }, 500);
+}
+
 function resolveSkip([observer1, observer2], timer, skipButton$, resolve) {
   clearTimeout(timer);
   observer2.disconnect();
   observer1.disconnect();
-  skipButton$?.click();
-  resolve();
+  skip(skipButton$, resolve);
 }
 
 async function readySkip(options) {
@@ -158,12 +164,12 @@ async function readySkip(options) {
   const target$ = getVisibilityParent(skipButton$);
 
   if (!target$) {
-    skipButton$?.click();
+    skip(skipButton$);
     return undefined;
   }
 
   if (!isDisplayNone(target$)) {
-    skipButton$.click();
+    skip(skipButton$);
     return undefined;
   }
 
