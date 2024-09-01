@@ -11,6 +11,7 @@ module.exports = (mode) => ({
     script: './src/script.js',
     background: './src/background.js',
     popup: './src/popup.js',
+    prescript: './src/prescript.js',
   },
   resolve: {
     extensions: ['.js'],

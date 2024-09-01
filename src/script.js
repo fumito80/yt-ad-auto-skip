@@ -138,7 +138,11 @@ async function setBadge() {
 
 function skip(skipButton$, resolve = () => {}) {
   setTimeout(() => {
-    skipButton$?.click();
+    const event = new MouseEvent('click', {
+      isTrusted: true,
+      clientX: 999999,
+    });
+    skipButton$?.dispatchEvent(event);
     resolve();
   }, 500);
 }
