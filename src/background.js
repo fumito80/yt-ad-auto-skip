@@ -1,3 +1,5 @@
+const targetUrl = 'https://www.youtube.com/watch';
+
 function setIcon(enabled) {
   const path = enabled ? 'icon48.png' : 'icon48-dis.png';
   chrome.action.setIcon({ path });
@@ -8,10 +10,18 @@ function setBadgeText(tabId, text = '') {
 }
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'loading' && tab.url?.startsWith(targetUrl)) {
+    chrome.scripting.executeScript({
+      target: { tabId },
+      files: ['prescript.js'],
+      world: 'MAIN',
+    });
+    return;
+  }
   if (changeInfo.status !== 'complete') {
     return;
   }
-  if (!tab.url?.startsWith('https://www.youtube.com/watch')) {
+  if (!tab.url?.startsWith(targetUrl)) {
     setBadgeText(tabId);
     return;
   }

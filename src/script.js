@@ -139,7 +139,6 @@ async function setBadge() {
 function skip(skipButton$, resolve = () => {}) {
   setTimeout(() => {
     const event = new MouseEvent('click', {
-      isTrusted: true,
       clientX: 999999,
     });
     skipButton$?.dispatchEvent(event);
