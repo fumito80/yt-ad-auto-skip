@@ -58,10 +58,6 @@ function setPlaybackRate(rate) {
   getVideoEl().playbackRate = rate;
 }
 
-function getPlaybackRate() {
-  return parseFloat($c('ytp-bezel-text').textContent) || 1;
-}
-
 function getSkipButton() {
   const className = [...$c(adMod).getElementsByTagName('button')]
     .flatMap((btn) => [...btn.classList])
@@ -269,15 +265,13 @@ function setChannelObserver(pageManager$) {
   });
 }
 
-function setAdObserver(adMod$, initMuted, initPlaybackRate) {
+function setAdObserver(adMod$, initMuted) {
   let muted = initMuted;
-  let playbackRate = initPlaybackRate;
   let defer = Promise.resolve(true);
   setObserver(
     adMod$,
     async ([record]) => {
       if (!record?.addedNodes?.length) {
-        setPlaybackRate(playbackRate);
         if (!muted) {
           mute(false);
         }
@@ -303,7 +297,6 @@ function setAdObserver(adMod$, initMuted, initPlaybackRate) {
           return undefined;
         }
         muted = isMuted();
-        playbackRate = getPlaybackRate();
         return readySkip(options);
       });
     },
@@ -325,8 +318,6 @@ async function run(adMod$) {
   }), 3000);
 
   const muted = isMuted();
-  const playbackRate = getPlaybackRate();
-
   const options = await getLocal();
   const isExcludeChannel = await checkExcludeChannel(options.exChannels);
 
@@ -341,7 +332,7 @@ async function run(adMod$) {
     readySkip(options);
   }
 
-  setAdObserver(adMod$, muted, playbackRate);
+  setAdObserver(adMod$, muted);
 }
 
 window.adMod$ = undefined;
