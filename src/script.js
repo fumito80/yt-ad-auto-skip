@@ -150,9 +150,13 @@ function resolveSkip([observer1, observer2], timer, skipButton$, resolve) {
 }
 
 async function readySkip(options) {
-  if (options.mute) mute(true);
+  if (options.mute) {
+    mute(true);
+  }
 
-  setPlaybackRate(options.playbackRate ?? 1);
+  if (options.playbackRate !== 1) {
+    setPlaybackRate(options.playbackRate);
+  }
 
   if (!options.skip) {
     return undefined;
